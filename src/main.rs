@@ -1,3 +1,6 @@
+use wordle_solver::algorithms::Naive; 
+
 fn main() {
-    println!("Hello, world!");
+    let naive = Naive::new(); 
+    println!("{:?}", naive); 
 }
