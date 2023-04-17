@@ -30,7 +30,41 @@ impl Wordle {
     }
 }
 
-#[derive(Default, PartialEq, Debug)]
+#[derive(Default, Debug)]
+pub struct Guess {
+    pub letter_stats: [LetterStat; 5],
+}
+
+impl Guess {
+    pub fn new(guess: &str, guess_result: &GuessResult) -> Self {
+        guess
+            .chars()
+            .zip(guess_result.letter_states.iter())
+            .enumerate()
+            .fold(Guess::default(), |mut guess, (i, (c, letter_state))| {
+                guess.letter_stats[i] = LetterStat {
+                    state: letter_state.clone(),
+                    guessed_letter: c,
+                };
+                guess
+            })
+    }
+
+    pub fn get_word(&self) -> String {
+        self.letter_stats
+            .iter()
+            .map(|x| x.guessed_letter)
+            .collect::<String>()
+    }
+}
+
+#[derive(Default, Debug)]
+pub struct LetterStat {
+    pub state: LetterState,
+    pub guessed_letter: char,
+}
+
+#[derive(Default, PartialEq, Debug, Clone)]
 pub enum LetterState {
     #[default]
     Wrong,
