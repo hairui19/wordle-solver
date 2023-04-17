@@ -1,6 +1,7 @@
+use std::collections::HashMap;
 use std::ops::{Index, IndexMut};
 
-mod algorithms;
+pub mod algorithms;
 mod error;
 
 pub struct Wordle;
@@ -9,19 +10,17 @@ impl Wordle {
     fn check_guess(answer: &str, guess: &str) -> GuessResult {
         assert!(answer.len() == 5);
         assert!(guess.len() == 5);
+        use self::LetterState::*;
 
         answer.chars().zip(guess.chars()).enumerate().fold(
             GuessResult::default(),
             |mut guess_result, (i, (a, g))| {
-                use self::LetterState::*;
                 if a == g {
                     guess_result[i] = Correct;
                 } else {
-                    if let Some(position) = guess
-                        .chars()
-                        .enumerate()
-                        .position(|(i, c)| guess_result[i] == Wrong && c == a)
-                    {
+                    if let Some(position) = guess.chars().enumerate().position(|(i, c)| {
+                        guess_result[i] == Wrong && c != answer.chars().nth(i).unwrap() && c == a
+                    }) {
                         guess_result[position] = Misplaced;
                     }
                 }
@@ -139,6 +138,13 @@ mod tests {
         assert_eq!(
             Wordle::check_guess("acaca", "hhhch"),
             [Wrong, Wrong, Wrong, Correct, Wrong]
+        );
+    }
+
+    fn test_5() {
+        assert_eq!(
+            Wordle::check_guess("acacc", "hhaha"),
+            [Wrong, Wrong, Correct, Wrong, Misplaced]
         );
     }
 }

@@ -16,5 +16,5 @@ impl Naive {
         }
     }
 
-    pub fn trim(&mut self, )
+    // pub fn trim(&mut self, )
 }
