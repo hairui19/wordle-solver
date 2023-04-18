@@ -18,8 +18,15 @@ impl Naive {
         }
     }
 
+    pub fn learn_batch(&mut self, fail_guesses: &[Guess]) {
+        for guess in fail_guesses {
+            self.learn(guess);
+        }
+    }
+
     pub fn learn(&mut self, failed_guess: &Guess) {
-        self.remaining_words.remove(failed_guess.get_word().as_str()); 
+        self.remaining_words
+            .remove(failed_guess.get_word().as_str());
         self.remaining_words.retain(|word| {
             let mut used = [false; 5];
             for (index, letter_stat) in failed_guess.letter_stats.iter().enumerate() {
@@ -47,6 +54,19 @@ impl Naive {
                         used[index] = true;
                     } else {
                         // println!("used stats before return: {:?}", used);
+                        return false;
+                    }
+                }
+            }
+
+            for (index, letter_stat) in failed_guess.letter_stats.iter().enumerate() {
+                if letter_stat.state == LetterState::Wrong {
+                    if let Some(_) = word
+                        .chars()
+                        .enumerate()
+                        .filter(|(i, _)| !used[*i])
+                        .position(|(_, c)| c == letter_stat.guessed_letter)
+                    {
                         return false;
                     }
                 }
