@@ -2,7 +2,6 @@ use itertools::iproduct;
 use std::collections::HashMap;
 use std::ops::{Index, IndexMut};
 
-pub mod algorithms;
 mod solver;
 pub use solver::Solver;
 
