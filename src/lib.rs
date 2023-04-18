@@ -1,10 +1,10 @@
+use itertools::iproduct;
 use std::collections::HashMap;
 use std::ops::{Index, IndexMut};
 
 pub mod algorithms;
-mod error;
 mod solver;
-pub use solver::Solver; 
+pub use solver::Solver;
 
 pub struct Wordle;
 
@@ -70,6 +70,12 @@ impl Guess {
     }
 }
 
+impl std::fmt::Display for Guess {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", format!("{}-{:?}", self.get_word(), self.get_result()))
+    }
+}
+
 #[derive(Default, PartialEq, Copy, Clone, Debug)]
 pub enum MatchResult {
     #[default]
@@ -77,6 +83,20 @@ pub enum MatchResult {
     Correct,
     Misplaced,
     Wrong,
+}
+
+impl MatchResult {
+    pub fn get_cartesian_product() -> impl Iterator<Item = [MatchResult; 5]> {
+        use MatchResult::*;
+        iproduct!(
+            [Correct, Misplaced, Wrong],
+            [Correct, Misplaced, Wrong],
+            [Correct, Misplaced, Wrong],
+            [Correct, Misplaced, Wrong],
+            [Correct, Misplaced, Wrong]
+        )
+        .map(|(a, b, c, d, e)| [a, b, c, d, e])
+    }
 }
 
 #[cfg(test)]
