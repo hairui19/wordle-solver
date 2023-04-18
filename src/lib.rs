@@ -3,92 +3,80 @@ use std::ops::{Index, IndexMut};
 
 pub mod algorithms;
 mod error;
+mod solver;
+pub use solver::Solver; 
 
 pub struct Wordle;
 
 impl Wordle {
-    fn check_guess(answer: &str, guess: &str) -> GuessResult {
+    fn check_guess(answer: &str, guess: &str) -> Guess {
         assert!(answer.len() == 5);
         assert!(guess.len() == 5);
-        use self::LetterState::*;
+        use self::MatchResult::*;
 
-        answer.chars().zip(guess.chars()).enumerate().fold(
-            GuessResult::default(),
-            |mut guess_result, (i, (a, g))| {
+        let mut match_result = answer.chars().zip(guess.chars()).enumerate().fold(
+            [MatchResult::default(); 5],
+            |mut match_result, (i, (a, g))| {
                 if a == g {
-                    guess_result[i] = Correct;
+                    match_result[i] = Correct;
                 } else {
                     if let Some(position) = guess.chars().enumerate().position(|(i, c)| {
-                        guess_result[i] == Wrong && c != answer.chars().nth(i).unwrap() && c == a
+                        match_result[i] == Wrong && c != answer.chars().nth(i).unwrap() && c == a
                     }) {
-                        guess_result[position] = Misplaced;
+                        match_result[position] = Misplaced;
                     }
                 }
-                guess_result
+                match_result
             },
-        )
+        );
+
+        let match_result: [MatchResult; 5] = match_result
+            .into_iter()
+            .map(|r| match r {
+                NotEvaluated | Wrong => Wrong,
+                Correct => Correct,
+                Misplaced => Misplaced,
+            })
+            .collect::<Vec<_>>()
+            .try_into()
+            .unwrap();
+
+        Guess {
+            guess: guess.chars().collect::<Vec<_>>().try_into().unwrap(),
+            match_result: match_result,
+        }
     }
 }
 
 #[derive(Default, Debug)]
 pub struct Guess {
-    pub letter_stats: [LetterStat; 5],
+    guess: [char; 5],
+    match_result: [MatchResult; 5],
 }
 
 impl Guess {
-    pub fn new(guess: &str, guess_result: &GuessResult) -> Self {
-        guess
-            .chars()
-            .zip(guess_result.letter_states.iter())
-            .enumerate()
-            .fold(Guess::default(), |mut guess, (i, (c, letter_state))| {
-                guess.letter_stats[i] = LetterStat {
-                    state: letter_state.clone(),
-                    guessed_letter: c,
-                };
-                guess
-            })
+    pub fn new(guess: [char; 5], match_result: [MatchResult; 5]) -> Self {
+        Guess {
+            guess,
+            match_result,
+        }
     }
-
     pub fn get_word(&self) -> String {
-        self.letter_stats
-            .iter()
-            .map(|x| x.guessed_letter)
-            .collect::<String>()
+        self.guess.iter().collect::<String>()
+    }
+
+    pub fn get_result(&self) -> &[MatchResult; 5] {
+        &self.match_result
     }
 }
 
-#[derive(Default, Debug)]
-pub struct LetterStat {
-    pub state: LetterState,
-    pub guessed_letter: char,
-}
-
-#[derive(Default, PartialEq, Debug, Clone)]
-pub enum LetterState {
+#[derive(Default, PartialEq, Copy, Clone, Debug)]
+pub enum MatchResult {
     #[default]
-    Wrong,
-    Misplaced,
+    NotEvaluated,
     Correct,
-}
-
-#[derive(Default, Debug)]
-pub struct GuessResult {
-    letter_states: [LetterState; 5],
-}
-
-impl Index<usize> for GuessResult {
-    type Output = LetterState;
-
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.letter_states[index]
-    }
-}
-
-impl IndexMut<usize> for GuessResult {
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        &mut self.letter_states[index]
-    }
+    Misplaced,
+    Wrong,
 }
 
 #[cfg(test)]
