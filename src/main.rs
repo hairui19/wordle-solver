@@ -11,7 +11,7 @@ fn main() {
     );
 
     let dictionary: &str = include_str!("../dictionary.txt");
-    let set = HashSet::from_iter(dictionary.lines().map(| line | line.split_once(" ").unwrap().0)); 
+    let set = Vec::from_iter(dictionary.lines().map(| line | line.split_once(" ").unwrap().0)); 
     let mut hash_map = HashMap::<String, f64>::new();
     // for word in dictionary
     //     .lines()

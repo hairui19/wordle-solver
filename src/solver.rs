@@ -6,7 +6,7 @@ use std::fmt;
 const DICTIONARY: &str = include_str!("../dictionary.txt");
 
 pub struct Solver {
-    remaining_words: HashSet<&'static str>,
+    remaining_words: Vec<&'static str>,
 }
 
 impl fmt::Debug for Solver {
@@ -24,7 +24,7 @@ impl fmt::Debug for Solver {
 }
 
 impl Solver {
-    pub fn new(words: HashSet<&'static str>) -> Self {
+    pub fn new(words: Vec<&'static str>) -> Self {
         Solver {
             remaining_words: words,
         }
@@ -33,14 +33,17 @@ impl Solver {
     pub fn learn_naive(&mut self, guess: &Guess) {
         let guessed_word = guess.get_word();
         let guessed_result = guess.get_result();
-        self.remaining_words.remove(guessed_word.as_str());
         use crate::MatchResult::*;
         self.remaining_words.retain(|word| {
+            if word == &guessed_word.as_str() {
+                return false;
+            }
             let mut used = [false; 5];
 
             for (i, ((w, g), r)) in word
-                .chars()
-                .zip(guessed_word.chars())
+                .as_bytes()
+                .iter()
+                .zip(guessed_word.as_bytes().iter())
                 .zip(guessed_result)
                 .enumerate()
             {
@@ -52,7 +55,7 @@ impl Solver {
                         used[i] = true;
                     }
                     Wrong => {
-                        if let Some(_) = word.chars().position(|c| c == g) {
+                        if let Some(_) = word.as_bytes().iter().position(|c| c == g) {
                             return false;
                         }
                     }
@@ -65,12 +68,13 @@ impl Solver {
                 }
             }
 
-            for (g_i, g) in guessed_word.chars().enumerate() {
+            for (g_i, g) in guessed_word.as_bytes().iter().enumerate() {
                 if guessed_result[g_i] != Misplaced {
                     continue;
                 }
                 if let Some((index, _)) = word
-                    .chars()
+                    .as_bytes()
+                    .iter()
                     .enumerate()
                     .filter(|(w_i, _)| !used[*w_i] && *w_i != g_i)
                     .find(|(_, w)| *w == g)
