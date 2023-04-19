@@ -11,8 +11,8 @@ fn main() {
     );
 
     let dictionary: &str = include_str!("../dictionary.txt");
-    let set = Vec::from_iter(dictionary.lines().map(| line | line.split_once(" ").unwrap().0)); 
-    let mut hash_map = HashMap::<String, f64>::new();
+    let all_words = Vec::from_iter(dictionary.lines().map(| line | line.split_once(" ").unwrap().0)); 
+    let mut hash_map = HashMap::<&'static str, f64>::new();
     // for word in dictionary
     //     .lines()
     //     .map(|line| line.split_once(" ").unwrap().0)
@@ -24,12 +24,12 @@ fn main() {
                 word.chars().collect::<Vec<char>>().try_into().unwrap(),
                 match_combination,
             );
-            let mut solver = Solver::new(set.clone());
+            let mut solver = Solver::new(all_words.clone());
             if let Some(average_bits_info) = solver.calculate_average_bits_info(&guess) {
                 sum += average_bits_info;
             }
         }
-        hash_map.entry(word.to_string()).or_insert(sum);
+        hash_map.entry(word).or_insert(sum);
     }
 
     let mut vec = hash_map.into_iter().collect::<Vec<_>>();
