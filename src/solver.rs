@@ -85,12 +85,6 @@ impl Solver {
         })
     }
 
-    pub fn learn_effective(&mut self, guess: &Guess) {
-        self.remaining_words.retain(|word| {
-            Self::check_guess(word, guess.get_word().as_str()).get_result() == guess.get_result()
-        })
-    }
-
     pub fn calculate_average_bits_info(&mut self, guess: &Guess) -> Option<f64> {
         let total_count = self.remaining_words.len() as f64;
         self.learn_naive(guess);
@@ -101,43 +95,5 @@ impl Solver {
         let probability = remaining_count / total_count;
         let average_bits_info = 0.0 - probability.log2() * probability;
         Some(average_bits_info)
-    }
-
-    fn check_guess(answer: &str, guess: &str) -> Guess {
-        assert!(answer.len() == 5);
-        assert!(guess.len() == 5);
-        use self::MatchResult::*;
-
-        let mut match_result = answer.chars().zip(guess.chars()).enumerate().fold(
-            [MatchResult::default(); 5],
-            |mut match_result, (i, (a, g))| {
-                if a == g {
-                    match_result[i] = Correct;
-                } else {
-                    if let Some(position) = guess.chars().enumerate().position(|(i, c)| {
-                        match_result[i] == Wrong && c != answer.chars().nth(i).unwrap() && c == a
-                    }) {
-                        match_result[position] = Misplaced;
-                    }
-                }
-                match_result
-            },
-        );
-
-        let match_result: [MatchResult; 5] = match_result
-            .into_iter()
-            .map(|r| match r {
-                NotEvaluated | Wrong => Wrong,
-                Correct => Correct,
-                Misplaced => Misplaced,
-            })
-            .collect::<Vec<_>>()
-            .try_into()
-            .unwrap();
-
-        Guess {
-            guess: guess.chars().collect::<Vec<_>>().try_into().unwrap(),
-            match_result: match_result,
-        }
     }
 }

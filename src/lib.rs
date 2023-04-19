@@ -20,7 +20,10 @@ impl Wordle {
                     match_result[i] = Correct;
                 } else {
                     if let Some(position) = guess.chars().enumerate().position(|(i, c)| {
-                        match_result[i] == Wrong && c != answer.chars().nth(i).unwrap() && c == a
+                        match_result[i] == Wrong
+                            || match_result[i] == NotEvaluated
+                                && c != answer.chars().nth(i).unwrap()
+                                && c == a
                     }) {
                         match_result[position] = Misplaced;
                     }
@@ -71,7 +74,11 @@ impl Guess {
 
 impl std::fmt::Display for Guess {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", format!("{}-{:?}", self.get_word(), self.get_result()))
+        write!(
+            f,
+            "{}",
+            format!("{}-{:?}", self.get_word(), self.get_result())
+        )
     }
 }
 
