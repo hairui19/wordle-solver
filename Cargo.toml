@@ -10,5 +10,8 @@ path = "src/lib.rs"
 path = "src/main.rs"
 name = "main"
 
+[profile.release]
+debug = true
+
 [dependencies]
 itertools = "0.10.5"

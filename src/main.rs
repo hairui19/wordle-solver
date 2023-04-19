@@ -1,5 +1,5 @@
 use itertools::iproduct;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 use wordle_solver::{Guess, MatchResult, Solver};
 
@@ -11,11 +11,12 @@ fn main() {
     );
 
     let dictionary: &str = include_str!("../dictionary.txt");
+    let set = HashSet::from_iter(dictionary.lines().map(| line | line.split_once(" ").unwrap().0)); 
     let mut hash_map = HashMap::<String, f64>::new();
-    for word in dictionary
-        .lines()
-        .map(|line| line.split_once(" ").unwrap().0)
-    {
+    // for word in dictionary
+    //     .lines()
+    //     .map(|line| line.split_once(" ").unwrap().0)
+    for word in vec!["weary"].into_iter() {
         println!("Processing word: {}", word);
         let mut sum: f64 = 0.0;
         for match_combination in MatchResult::get_cartesian_product() {
@@ -23,7 +24,7 @@ fn main() {
                 word.chars().collect::<Vec<char>>().try_into().unwrap(),
                 match_combination,
             );
-            let mut solver = Solver::new();
+            let mut solver = Solver::new(set.clone());
             if let Some(average_bits_info) = solver.calculate_average_bits_info(&guess) {
                 sum += average_bits_info;
             }
