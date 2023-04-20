@@ -16,20 +16,10 @@ fn main() {
     // for word in dictionary
     //     .lines()
     //     .map(|line| line.split_once(" ").unwrap().0)
+    let mut solver = Solver::new(all_words);
     for word in vec!["weary"].into_iter() {
         println!("Processing word: {}", word);
-        let mut sum: f64 = 0.0;
-        for match_combination in MatchResult::get_cartesian_product() {
-            let guess = Guess::new(
-                word.chars().collect::<Vec<char>>().try_into().unwrap(),
-                match_combination,
-            );
-            let mut solver = Solver::new(all_words.clone());
-            if let Some(average_bits_info) = solver.calculate_average_bits_info(&guess) {
-                sum += average_bits_info;
-            }
-        }
-        hash_map.entry(word).or_insert(sum);
+        hash_map.entry(word).or_insert(solver.calculate_entropy(word));
     }
 
     let mut vec = hash_map.into_iter().collect::<Vec<_>>();
