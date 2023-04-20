@@ -8,7 +8,7 @@ use std::fs::File;
 const FIRST_GUESSES_FILE_PATH: &str = "first_guesses_file.json";
 
 pub struct Solver {
-    remaining_words: Vec<&'static str>,
+    remaining_words: Vec<(&'static str, f64)>,
     match_combinations: Vec<[MatchResult; 5]>,
     is_first_guess: bool,
 }
@@ -28,7 +28,7 @@ impl fmt::Debug for Solver {
 }
 
 impl Solver {
-    pub fn new(words: Vec<&'static str>) -> Self {
+    pub fn new(words: Vec<(&'static str, f64)>) -> Self {
         Solver {
             remaining_words: words,
             match_combinations: MatchResult::get_cartesian_product().collect::<Vec<_>>(),
@@ -65,11 +65,11 @@ impl Solver {
         let guess_word = &guess.get_word();
         let guess_result = guess.get_result();
         self.remaining_words
-            .retain(|word| Self::is_matching(word, guess_word, guess_result));
+            .retain(|(word, _)| Self::is_matching(word, guess_word, guess_result));
         self.is_first_guess = false; 
     }
 
-    fn calibrate(&self) {
+    pub fn calibrate(&self) {
         let hash_map = self.calculate_entropies_for_remaining_words();
         let file = File::create(FIRST_GUESSES_FILE_PATH).unwrap();
         serde_json::to_writer_pretty(file, &hash_map);
@@ -77,8 +77,8 @@ impl Solver {
 
     fn calculate_entropies_for_remaining_words(&self) -> HashMap<&'static str, f64> {
         let mut entropies_map = HashMap::<&'static str, f64>::new();
-        for word in self.remaining_words.iter() {
-            let word_entropy = self.calculate_entropy_for_word(word);
+        for (word, freq_sigmoid) in self.remaining_words.iter() {
+            let word_entropy = self.calculate_entropy_for_word(word) * freq_sigmoid;
             entropies_map.entry(word).or_insert(word_entropy);
         }
         return entropies_map;
@@ -87,7 +87,6 @@ impl Solver {
     /// Calculates the entropy value of the input `guess_word` against
     /// the remaining set of words in the solver.
     fn calculate_entropy_for_word(&self, guess_word: &str) -> f64 {
-        // println!("Calibrating word: {}", guess_word);
         let mut entropy = 0.0;
         let total_remaining_word_count = self.remaining_words.len();
         for match_combination in self.match_combinations.iter() {
@@ -114,7 +113,7 @@ impl Solver {
     ) -> usize {
         let mut number_of_matching_words = 0;
 
-        for word in self.remaining_words.iter() {
+        for (word, _) in self.remaining_words.iter() {
             if Self::is_matching(word, guess_word, match_combination) {
                 number_of_matching_words += 1;
             }
