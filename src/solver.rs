@@ -7,6 +7,7 @@ const DICTIONARY: &str = include_str!("../dictionary.txt");
 
 pub struct Solver {
     remaining_words: Vec<&'static str>,
+    match_combinations: Vec<[MatchResult; 5]>,
 }
 
 impl fmt::Debug for Solver {
@@ -27,22 +28,26 @@ impl Solver {
     pub fn new(words: Vec<&'static str>) -> Self {
         Solver {
             remaining_words: words,
+            match_combinations: MatchResult::get_cartesian_product().collect::<Vec<_>>(),
         }
     }
 
     /// Calculates the entropy value of the input `guess_word` against
     /// the remaining set of words in the solver.
     pub fn calculate_entropy(&self, guess_word: &str) -> f64 {
-        let mut entropy = 0.0; 
+        let mut entropy = 0.0;
         let total_remaining_word_count = self.remaining_words.len();
-        for match_combination in MatchResult::get_cartesian_product() {
-            let number_of_matching_words = self.get_number_of_matching_words(guess_word, &match_combination); 
-            if number_of_matching_words == 0 { continue; }
-            let probability = number_of_matching_words as f64 / total_remaining_word_count as f64; 
+        for match_combination in self.match_combinations.iter() {
+            let number_of_matching_words =
+                self.get_number_of_matching_words(guess_word, match_combination);
+            if number_of_matching_words == 0 {
+                continue;
+            }
+            let probability = number_of_matching_words as f64 / total_remaining_word_count as f64;
             let average_bits_info = 0.0 - probability.log2() * probability;
             entropy += average_bits_info;
         }
-        
+
         entropy
     }
 
