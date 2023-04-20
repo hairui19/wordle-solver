@@ -2,6 +2,7 @@ use crate::Guess;
 use crate::MatchResult;
 use std::collections::HashSet;
 use std::fmt;
+use std::collections::HashMap; 
 
 const DICTIONARY: &str = include_str!("../dictionary.txt");
 
@@ -32,9 +33,26 @@ impl Solver {
         }
     }
 
+    pub fn suggest_top_ten_words(&self) -> Vec<&'static str> {
+        let entropies_map = self.calculate_entropies_for_remaining_words();
+        let mut vec = entropies_map.into_iter().collect::<Vec<_>>();
+        vec.sort_by(|(_, p_1), (_, p_2)| p_1.partial_cmp(p_2).unwrap_or(std::cmp::Ordering::Equal));
+      
+        return vec.into_iter().take(10).map(|(word, _)| word).collect();
+    }
+
+    fn calculate_entropies_for_remaining_words(&self) -> HashMap::<&'static str, f64> {
+        let mut entropies_map = HashMap::<&'static str, f64>::new();
+        for word in self.remaining_words.iter() {
+            let word_entropy = self.calculate_entropy_for_word(word); 
+            entropies_map.entry(word).or_insert(word_entropy);
+        }
+        return entropies_map; 
+    }
+
     /// Calculates the entropy value of the input `guess_word` against
     /// the remaining set of words in the solver.
-    pub fn calculate_entropy(&self, guess_word: &str) -> f64 {
+    fn calculate_entropy_for_word(&self, guess_word: &str) -> f64 {
         let mut entropy = 0.0;
         let total_remaining_word_count = self.remaining_words.len();
         for match_combination in self.match_combinations.iter() {
