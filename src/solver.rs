@@ -5,7 +5,6 @@ use std::collections::HashSet;
 use std::fmt;
 use std::fs::File;
 
-const DICTIONARY: &str = include_str!("../dictionary.txt");
 const FIRST_GUESSES_FILE_PATH: &str = "first_guesses_file.json";
 
 pub struct Solver {
@@ -67,6 +66,7 @@ impl Solver {
         let guess_result = guess.get_result();
         self.remaining_words
             .retain(|word| Self::is_matching(word, guess_word, guess_result));
+        self.is_first_guess = false; 
     }
 
     fn calibrate(&self) {
@@ -87,7 +87,7 @@ impl Solver {
     /// Calculates the entropy value of the input `guess_word` against
     /// the remaining set of words in the solver.
     fn calculate_entropy_for_word(&self, guess_word: &str) -> f64 {
-        println!("Calibrating word: {}", guess_word);
+        // println!("Calibrating word: {}", guess_word);
         let mut entropy = 0.0;
         let total_remaining_word_count = self.remaining_words.len();
         for match_combination in self.match_combinations.iter() {

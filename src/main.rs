@@ -30,6 +30,12 @@ fn main() {
     loop {
         buffer.clear();
         std::io::stdin().read_line(&mut buffer).unwrap();
-        println!("{}", buffer.trim());
+        let guess: Guess = buffer.trim().parse().unwrap(); 
+        println!("Your guess is: {:?}", guess);
+        solver.calibrate_on_guess(&guess); 
+        println!("{}", CLEAR);
+        for suggested_word in solver.suggest_top_ten_words() {
+            println!("{}-{}", suggested_word.0, suggested_word.1);
+        }
     }
 }
